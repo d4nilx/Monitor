@@ -6,4 +6,7 @@ public class ProcessInfo
     public string Name { get; set; } = string.Empty;
     public double RamMb { get; set; }
     public double CpuPercent { get; set; }
+    
+    // Now we can add category to our processes 
+    public string Category { get; set; } = string.Empty;
 }

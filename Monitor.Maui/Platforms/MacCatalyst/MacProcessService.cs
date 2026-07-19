@@ -14,8 +14,9 @@ public class MacProcessService : IProcessService
         {
             var psi = new ProcessStartInfo
             {
+                // here the 'command' instead of 'com' gives us full path to file of program 
                 FileName = "/bin/ps",
-                Arguments = "-axo pid,pcpu,rss,comm", 
+                Arguments = "-axo pid,pcpu,rss,command", 
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
@@ -34,24 +35,32 @@ public class MacProcessService : IProcessService
 
                 if (int.TryParse(parts[0], out int pid) &&
                     double.TryParse(parts[1], out double cpu) &&
-                    double.TryParse(parts[2], out double rss)) 
+                    double.TryParse(parts[2], out double rss))
                 {
-                    string cleanName = Path.GetFileName(parts[3]);
+                    string fullPath = parts[3];
+                    string cleanName = Path.GetFileName(fullPath);
+                    
+                    // === Smart categorization of processes based on their names ===
+                    string category = "Background processes";
+                    if (fullPath.StartsWith("/Applications/"))
+                        category = "My apps";
+                    else if (fullPath.StartsWith("/System/") || fullPath.StartsWith("/usr/"))
+                        category = "System macOS";
+                    if (rss /  1024.00 < 5.0 && category == "System macOS")
+                        continue;
 
                     processList.Add(new ProcessInfo
                     {
                         Id = pid,
                         CpuPercent = Math.Round(cpu, 1), 
                         RamMb = Math.Round(rss / 1024.0, 1), 
-                        Name = cleanName
+                        Name = cleanName,
+                        Category = category
                     });
                 }
             }
         }
-        catch
-        {
-            
-        }
+        catch { } // just ignore
 
         return processList.OrderByDescending(p => p.RamMb).ToList();
     }

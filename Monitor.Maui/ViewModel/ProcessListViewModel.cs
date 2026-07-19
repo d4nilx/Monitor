@@ -9,9 +9,13 @@ namespace Monitor.Maui.ViewModel;
 public partial class ProcessListViewModel : ObservableObject
 {
     private readonly IProcessService _processService;
+    private IDispatcherTimer _timer;
 
     [ObservableProperty]
     private bool _isBusy;
+    public int TotalCores => Environment.ProcessorCount; // Counts the cores | threads of processor
+    public string OsVersion => Environment.OSVersion.VersionString;
+    public string MachineName => Environment.MachineName;
 
     public ObservableCollection<ProcessInfo> Processes { get; } = new();
 
@@ -19,6 +23,13 @@ public partial class ProcessListViewModel : ObservableObject
     {
         _processService = processService;
         LoadProcessesCommand.Execute(null);
+        _timer = Application.Current.Dispatcher.CreateTimer();
+        _timer.Interval = TimeSpan.FromSeconds(3);
+        _timer.Tick += (s, e) => 
+        {
+            if (!IsBusy) LoadProcessesCommand.Execute(null);
+        };
+        _timer.Start();
     }
 
     [RelayCommand]
