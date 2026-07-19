@@ -4,11 +4,12 @@
              x:Class="Monitor.Maui.MainPage"
              xmlns:viewmodel="clr-namespace:Monitor.Maui.ViewModel"
              xmlns:models="clr-namespace:Monitor.Core.Models;assembly=Monitor.Core"
+             xmlns:local="clr-namespace:Monitor.Maui"
              x:DataType="viewmodel:ProcessListViewModel"
              Shell.NavBarIsVisible="False"
              BackgroundColor="#050505">
 
-    <Grid RowDefinitions="Auto, Auto, Auto, *" Padding="25" RowSpacing="20">
+    <Grid RowDefinitions="Auto, Auto, Auto, Auto, *" Padding="25" RowSpacing="20">
 
         <!-- HEADER -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
@@ -16,9 +17,18 @@
                 <Label Text="SYSTEM_MONITOR_CORE" FontSize="24" FontAttributes="Bold" TextColor="#00F2FF" CharacterSpacing="2"/>
                 <Label Text="STATUS: LIVE_MONITORING_ACTIVE" FontSize="10" TextColor="#32D74B" FontAttributes="Bold"/>
             </VerticalStackLayout>
+            <Button Grid.Column="1" Text="↻ REFRESH"
+                    Command="{Binding LoadProcessesCommand}"
+                    BackgroundColor="#0A0A0A"
+                    TextColor="#00F2FF"
+                    BorderColor="#00F2FF"
+                    BorderWidth="1"
+                    CornerRadius="4"
+                    FontAttributes="Bold"
+                    FontSize="11"/>
         </Grid>
 
-        <!-- ВІДЖЕТИ СИСТЕМИ (Тепер вони тут і стильні!) -->
+        <!-- SYSTEM INFO CARDS -->
         <Grid Grid.Row="1" ColumnDefinitions="*, *, *" ColumnSpacing="15">
             <Border Grid.Column="0" Stroke="#00F2FF" StrokeThickness="1" BackgroundColor="#0A0A0A" Padding="15">
                 <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
@@ -26,14 +36,12 @@
                     <Label Text="{Binding MachineName}" TextColor="White" FontSize="14" FontAttributes="Bold" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
             </Border>
-
             <Border Grid.Column="1" Stroke="#00F2FF" StrokeThickness="1" BackgroundColor="#0A0A0A" Padding="15">
                 <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
                     <Label Text="CPU_CORES" TextColor="#BC00FF" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center"/>
                     <Label Text="{Binding TotalCores, StringFormat='{0} THREADS'}" TextColor="#00F2FF" FontSize="14" FontAttributes="Bold" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
             </Border>
-
             <Border Grid.Column="2" Stroke="#00F2FF" StrokeThickness="1" BackgroundColor="#0A0A0A" Padding="15">
                 <VerticalStackLayout HorizontalOptions="Center" Spacing="5">
                     <Label Text="OS_VERSION" TextColor="#BC00FF" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center"/>
@@ -42,8 +50,28 @@
             </Border>
         </Grid>
 
-        <!-- CATEGORY HEADERS -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,100,80,80,70" Padding="10,0">
+        <!-- CHARTS -->
+        <Grid Grid.Row="2" ColumnDefinitions="*, *" ColumnSpacing="15" HeightRequest="120">
+            <Border Grid.Column="0" Stroke="#222222" StrokeThickness="1" BackgroundColor="#0A0A0A" Padding="10">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="CPU LOAD" TextColor="#32D74B" FontSize="10" FontAttributes="Bold"/>
+                    <GraphicsView x:Name="CpuChart"
+                                  Drawable="{Binding CpuDrawable}"
+                                  HeightRequest="80"/>
+                </VerticalStackLayout>
+            </Border>
+            <Border Grid.Column="1" Stroke="#222222" StrokeThickness="1" BackgroundColor="#0A0A0A" Padding="10">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="RAM USAGE" TextColor="#FF9F0A" FontSize="10" FontAttributes="Bold"/>
+                    <GraphicsView x:Name="RamChart"
+                                  Drawable="{Binding RamDrawable}"
+                                  HeightRequest="80"/>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+        <!-- COLUMN HEADERS -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,100,80,80,70" Padding="10,0">
             <Label Grid.Column="0" Text="PROCESS_DATA" TextColor="#505050" FontSize="10" FontAttributes="Bold"/>
             <Label Grid.Column="1" Text="RAM" TextColor="#505050" FontSize="10" FontAttributes="Bold" HorizontalOptions="End"/>
             <Label Grid.Column="2" Text="CPU" TextColor="#505050" FontSize="10" FontAttributes="Bold" HorizontalOptions="End"/>
@@ -51,25 +79,26 @@
             <Label Grid.Column="4" Text="ACTION" TextColor="#505050" FontSize="10" FontAttributes="Bold" HorizontalOptions="Center"/>
         </Grid>
 
-        <!-- PROCESS LIST (Живий список) -->
-        <CollectionView Grid.Row="3" ItemsSource="{Binding Processes}">
+        <!-- PROCESS LIST -->
+        <CollectionView Grid.Row="4" ItemsSource="{Binding Processes}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="models:ProcessInfo">
                     <Border Stroke="#222222" StrokeThickness="1" BackgroundColor="#0A0A0A" Margin="0,4" Padding="15,10" StrokeShape="RoundRectangle 4">
                         <Grid ColumnDefinitions="*,100,80,80,70">
-                            
                             <VerticalStackLayout Grid.Column="0" VerticalOptions="Center">
                                 <Label Text="{Binding Name}" TextColor="White" FontSize="14" FontAttributes="Bold" LineBreakMode="TailTruncation"/>
                                 <Label Text="{Binding Category}" TextColor="#BC00FF" FontSize="10"/>
                             </VerticalStackLayout>
-
                             <Label Grid.Column="1" Text="{Binding RamMb, StringFormat='{0:F1} MB'}" TextColor="#FF9F0A" VerticalOptions="Center" HorizontalOptions="End" FontAttributes="Bold"/>
                             <Label Grid.Column="2" Text="{Binding CpuPercent, StringFormat='{0:F1}%'}" TextColor="#32D74B" VerticalOptions="Center" HorizontalOptions="End" FontAttributes="Bold"/>
                             <Label Grid.Column="3" Text="{Binding Id}" TextColor="#505050" VerticalOptions="Center" HorizontalOptions="End"/>
-                            
-                            <Button Grid.Column="4" Text="KILL" Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:ProcessListViewModel}}, Path=KillProcessCommand}" 
-                                    CommandParameter="{Binding Id}" BackgroundColor="#1A0005" TextColor="#FF0055" 
-                                    BorderColor="#FF0055" BorderWidth="1" CornerRadius="4" HeightRequest="30" FontSize="11" FontAttributes="Bold"/>
+                            <Button Grid.Column="4" Text="KILL"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodel:ProcessListViewModel}}, Path=KillProcessCommand}"
+                                    CommandParameter="{Binding Id}"
+                                    BackgroundColor="#1A0005" TextColor="#FF0055"
+                                    BorderColor="#FF0055" BorderWidth="1"
+                                    CornerRadius="4" HeightRequest="30"
+                                    FontSize="11" FontAttributes="Bold"/>
                         </Grid>
                     </Border>
                 </DataTemplate>
