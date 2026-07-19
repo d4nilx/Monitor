@@ -20,9 +20,13 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
-
+        // Crossplatform dependency injection for IProcessService
 #if MACCATALYST
-        builder.Services.AddSingleton<IProcessService, MacProcessService>();
+        // if it's on macOS
+        builder.Services.AddSingleton<Monitor.Core.Interfaces.IProcessService, Monitor.Maui.Platforms.MacCatalyst.MacProcessService>();
+#elif WINDOWS
+        // if it's on Windows
+        builder.Services.AddSingleton<Monitor.Core.Interfaces.IProcessService, Monitor.Maui.Platforms.Windows.WindowsProcessService>();
 #endif
 
         builder.Services.AddTransient<ProcessListViewModel>();

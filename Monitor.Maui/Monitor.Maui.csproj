@@ -34,4 +34,8 @@
         <ProjectReference Include="..\Monitor.Core\Monitor.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="Platforms\Windows\WindowsProcessService.cs" />
+    </ItemGroup>
+
 </Project>
